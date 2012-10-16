@@ -5,6 +5,8 @@
 
 #include "Neighbours.h"
 
+#include "utils.h"
+
 // experiment to determine probabilities of opening a zero in corner/edge/center cells
 void test_zero_probabilities()
 {
@@ -18,7 +20,7 @@ void test_zero_probabilities()
     int center_zeros = 0;
 
 
-    for (int i = 0; i < 100000; i++)
+    for (int g = 0; g < 100000; g++)
     {
         MineField mf(10, 10, 10);
 
@@ -56,32 +58,41 @@ void test_zero_probabilities()
         }
     }
 
+    printf("Corner/edge/center empty cell probabilities:\n");
     printf("corner zeros = %.1f%%\n", 100.0 * corner_zeros / corner_total);
     printf("edge zeros   = %.1f%%\n", 100.0 * edge_zeros / edge_total);
     printf("center zeros = %.1f%%\n", 100.0 * center_zeros / center_total);
 
 }
 
+void test_rand_int()
+{
+    const int size = 10;
+    int histogram[size];
+
+    for (int i = 0; i < size; i++) histogram[i] = 0;
+
+    for (int i = 0; i < 100000000; i++)
+    {
+        int x = rand_int(0, size - 1);
+
+        histogram[x]++;
+    }
+
+    printf("Random distribution 0-%d:\n", size);
+    for (int i = 0; i < size; i++) 
+    {
+        printf("%d: %d\n", i, histogram[i]);
+    }
+}
+
 
 int main()
 {
-    srand(4);
-
-#if 0
-    Neighbours n;
-
-    n.addLocation(Location(1, 1));
-    n.addLocation(Location(1, 2));
-    n.addLocation(Location(1, 3));
-
-    Neighbours n2 = n;
-
-    for (Location loc : n2)
-    {
-        printf("%d,%d\n", loc.row, loc.col);
-    }
-    return 0;
-#endif
+    srand(5);
+   
+    test_zero_probabilities();
+    test_rand_int();
 
     AutoSweep      auto_sweep;
     SimulatedGame  game;
