@@ -18,11 +18,11 @@ add_library(autosweep
 
   
 #--- command line test tool ---
-add_executable(as
+add_executable(cas
   as.cc
   )
 
-target_link_libraries(as autosweep)
+target_link_libraries(cas autosweep)
 
 
 
@@ -42,8 +42,9 @@ if(QT4_FOUND)
   include_directories(${QT_INCLUDE_DIR})
   link_directories(${QT_LIBRARY_DIR})
 
+  qt4_add_resources(AS_MOC_QRCS qt/icons.qrc)
+
   if (APPLE)
-    qt4_add_resources(AS_MOC_QRCS qt/icons.qrc)
   
     set(OSX_ICON_FILES ${CMAKE_CURRENT_SOURCE_DIR}/icons/autosweep.icns) 
     set_source_files_properties( ${OSX_ICON_FILES} PROPERTIES MACOSX_PACKAGE_LOCATION Resources)  
