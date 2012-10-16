@@ -9,7 +9,7 @@ int rand_int(int a, int b)
 {
     assert(a <= b);
 
-    return rand() % (b - a) + a;
+    return rand() % (b + 1 - a) + a;
 }
 
 std::string int2str(int n)
