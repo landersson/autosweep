@@ -24,7 +24,7 @@ public:
 
         while (keepRunning() && games_played < num_games_to_play)
         {
-            _game->startNewGame(16, 16, 52);
+            _game->startNewGame(16, 16, 26);
 
             int moves_in_this_game = 0;
 

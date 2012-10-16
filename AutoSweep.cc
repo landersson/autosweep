@@ -63,8 +63,8 @@ void AutoSweep::selectFirstUnknown(const MineField* mf)
 #if 1
     while (true)
     {
-        int i = rand_int(0, mf->getRows());
-        int j = rand_int(0, mf->getCols());
+        int i = rand_int(0, mf->getRows() - 1);
+        int j = rand_int(0, mf->getCols() - 1);
 
         //        printf("%d, %d\n", i, j);
 
