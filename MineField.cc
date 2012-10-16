@@ -35,7 +35,7 @@ void MineField::setupValues()
         {
             if (this->getCell(i, j).getValue() != Cell::MINE) continue;
 
-            LocationList lst = this->getNeighbours(i, j);
+            Neighbours lst = this->getNeighbours(i, j);
 
             for (size_t k = 0; k < lst.size(); k++)
             {

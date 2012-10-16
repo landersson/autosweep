@@ -106,7 +106,7 @@ int AutoSweep::flagObviousMines(const MineField* mf)
             if ((cell.getState() == Cell::KNOWN) &&
                 cell.getValue() > 0)
             {
-                MineField::LocationList neighbours = mf->getNeighbours(i, j);
+                Neighbours neighbours = mf->getNeighbours(i, j);
 
                 unsigned num_unknown_neighbours = 0;
                 unsigned num_flagged_neighbours = 0;
@@ -186,7 +186,7 @@ int AutoSweep::findSafeCells(const MineField* mf)
 
 int AutoSweep::countNeighboursWithState(const MineField* mf, int i, int j, int state)
 {
-    MineField::LocationList neighbours = mf->getNeighbours(i, j);
+    Neighbours neighbours = mf->getNeighbours(i, j);
 
     int num_flagged = 0;
 
@@ -219,7 +219,7 @@ void AutoSweep::findEdges(const MineField* mf)
 
 void AutoSweep::solveEdges(const MineField* mf)
 {
-    for (const MineField::LocationList & edge : _edges)
+    for (const MineField::LocationList& edge : _edges)
     {
         _edge_solver.solveEdge(mf, edge);
     }
@@ -228,7 +228,7 @@ void AutoSweep::solveEdges(const MineField* mf)
 
 bool AutoSweep::rejectMineAt(const MineField* mf, int i, int j)
 {
-    MineField::LocationList neighbours = mf->getNeighbours(i, j);
+    Neighbours neighbours = mf->getNeighbours(i, j);
 
     //    printf("reject %d,%d\n", j, i);
 

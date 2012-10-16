@@ -1,4 +1,7 @@
 
+#ifndef _SIMULATED_GAME_H
+#define _SIMULATED_GAME_H
+
 #include "GameInterface.h"
 #include "GameLogic.h"
 
@@ -47,3 +50,5 @@ protected:
     GameLogic _gl;
 
 };
+
+#endif // _SIMULATED_GAME_H

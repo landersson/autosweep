@@ -76,9 +76,6 @@ void MineFieldButton::mouseReleaseEvent(QMouseEvent* e)
         {
             gui->dig(i, j);
         }
-        else if (e->button() == Qt::RightButton)
-        {
-        }
     }
     catch (std::exception e)
     {

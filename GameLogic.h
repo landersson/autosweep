@@ -1,3 +1,4 @@
+
 #ifndef _GAME_LOGIC_H
 #define _GAME_LOGIC_H
 
@@ -14,13 +15,8 @@ protected:
     void floodFillDig(int i, int j);
     void revealAll();
     void setState(GameState new_state);
-    bool validState(GameState state);
-
-    bool markedNeighboursNumberOK(int i, int j);
-    void digAllUnknownNeighbours(int i, int j);
 
 public:
-
     GameLogic();
     ~GameLogic();
 
@@ -34,21 +30,16 @@ public:
 
     GameState getState() const;
 
-    std::string cheat();
     std::string toString();
-    MineField::LocationList getNeighbours(int i, int j);
+    Neighbours getNeighbours(int i, int j);
 
     Cell& getCell(int i, int j);
 
-    MineField* getMineField()
-    {
-        return _mine_field;
-    }
+    MineField* getMineField();
 
     void dig(int i, int j);
     void mark(int i, int j);
     void unmark(int i, int j);
-    void explore(int i, int j);
 
     bool checkWin();
     bool checkLose();
@@ -56,5 +47,25 @@ public:
     virtual void gameWon() { }
     virtual void gameLost() { }
 };
+
+
+//--- inline method declarations ----------------------------------------------
+
+inline MineField* GameLogic::getMineField()
+{
+    return _mine_field;
+}
+
+
+inline int GameLogic::getRows()
+{
+    return _mine_field->getRows();
+}
+
+inline int GameLogic::getCols()
+{
+    return _mine_field->getCols();
+}
+
 
 #endif // GAMELOGIC_H

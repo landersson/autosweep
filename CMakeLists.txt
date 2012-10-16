@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 
 
 set(CMAKE_BUILD_TYPE "Release")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Wall")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Wall -pedantic")
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -23,7 +23,6 @@ add_executable(cas
   )
 
 target_link_libraries(cas autosweep)
-
 
 
 # check if Qt development files are available
@@ -82,7 +81,7 @@ if(QT4_FOUND)
 
 else(QT4_FOUND)
 
-  message(STATUS "Qt4 not found!")
+  message(STATUS "Qt4 not found, Qt apps disabled")
 
 endif(QT4_FOUND)
 

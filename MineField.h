@@ -4,20 +4,18 @@
 
 #include "Cell.h"
 #include "Grid.h"
-#include "Location.h"
 
 #include <vector>
-
-#define GRID
 
 class MineField : public Grid<Cell>
 {
 public:
-
+    // constructor
     MineField(int rows = 0, int cols = 0, int num_mines = 0);
 
     void  resetCells();
 
+    // initialize cell values (i.e, number of neighbours that are bombs)
     void setupValues();
 
     // randomly fill in <num> mines into board

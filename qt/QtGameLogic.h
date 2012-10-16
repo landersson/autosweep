@@ -1,5 +1,5 @@
-#ifndef _QGAME_LOGIC_H
-#define _QGAME_LOGIC_H
+#ifndef _QT_GAME_LOGIC_H
+#define _QT_GAME_LOGIC_H
 
 #include "GameLogic.h"
 #include <QObject>
@@ -15,4 +15,4 @@ signals:
     void loseSignal();
 };
 
-#endif // QGAMELOGIC_H
+#endif // _QT_GAME_LOGIC_H

@@ -32,7 +32,7 @@ public:
             {
                 _auto_sweeper->sweep(_game->getMineField());
 
-                //                printf("actions = %zd\n", _auto_sweeper->getSweepActions().size());
+                //printf("actions = %zd\n", _auto_sweeper->getSweepActions().size());
 
                 for (const SweepAction & action : _auto_sweeper->getSweepActions())
                 {
@@ -56,7 +56,7 @@ public:
 
             if ((games_played % 10) == 0)
             {
-                //                printGamesWon(games_won, games_played);
+                // printGamesWon(games_won, games_played);
             }
         }
 

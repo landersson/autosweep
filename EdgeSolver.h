@@ -29,7 +29,7 @@ public:
         _check_points.clear();
         _valid_configs.clear();
 
-        printf("Edge Size: %zd\n", edge.size());
+        printf("Edge Size: %d\n", (unsigned)edge.size());
 
         findCheckPoints(edge);
 
@@ -114,7 +114,7 @@ private:
 
         for (Location edge_point : edge)
         {
-            MineField::LocationList neighbours = _minefield->getNeighbours(edge_point.row, edge_point.col);
+            Neighbours neighbours = _minefield->getNeighbours(edge_point.row, edge_point.col);
             for (Location loc : neighbours)
             {
                 const Cell& nb = _minefield->getCell(loc);
@@ -142,7 +142,7 @@ private:
 
     void subtractFlaggedNeighbours(CheckPoint& cp)
     {
-        MineField::LocationList neighbours = _minefield->getNeighbours(cp.location.row, cp.location.col);
+        Neighbours neighbours = _minefield->getNeighbours(cp.location.row, cp.location.col);
         for (Location loc : neighbours)
         {
             if (_minefield->getCell(loc).getState() == Cell::FLAGGED)

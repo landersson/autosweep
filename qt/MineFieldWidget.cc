@@ -6,11 +6,10 @@
 #include "MineField.h"
 #include "QtGameLogic.h"
 
-#include <QMainWindow>
-
 #include <QBoxLayout>
 
 #include <stdexcept>
+
 
 MineFieldWidget::MineFieldWidget() :
     QWidget(0),
@@ -194,7 +193,7 @@ void MineFieldWidget::updateGUI(bool rebuildMineField)
 
 #if 0
     int tag = 1;
-    for (const MineField::LocationList & locations : _auto_sweep->autoSweep().getEdges())
+    for (const Neighbours & locations : _auto_sweep->autoSweep().getEdges())
     {
         for (Location loc : locations)
         {
@@ -249,11 +248,12 @@ void MineFieldWidget::updateGUI(bool rebuildMineField)
 
 void MineFieldWidget::newGame(int row, int col, int num)
 {
-    /**initialize static variables**/
+    // initialize static variables
     MineFieldButton::state = 0;
     MineFieldButton::gui = this;
-    /******************************/
-    printf("newGame(%d, %d, %d)\n", row, col, num);
+
+
+    printf("MineFieldWidget::newGame(%d, %d, %d)\n", row, col, num);
 
     this->_gl->newGame(row, col, num);
     this->createMineField(row, col);
@@ -276,27 +276,23 @@ void MineFieldWidget::loseSlot()
                                 "<p>better luck next time</p>"));
 }
 
-
 void MineFieldWidget::dig(int i, int j)
 {
     this->_gl->dig(i, j);
     this->updateGUI();
 }
 
-#if 1
 void MineFieldWidget::mark(int i, int j)
 {
     this->_gl->mark(i, j);
     this->updateGUI();
 }
 
-
 void MineFieldWidget::unmark(int i, int j)
 {
     this->_gl->unmark(i, j);
     this->updateGUI();
 }
-#endif
 
 void MineFieldWidget::toggle(int i, int j)
 {
@@ -319,54 +315,6 @@ void MineFieldWidget::sinkWidgetsIfUnknown(int i, int j)
 }
 
 
-#if 0
-void MineFieldWidget::explore(int i, int j)
-{
-    printf("MineFieldWidget::explore(%d, %d)\n", i, j);
-
-    this->_gl->explore(i, j);
-    this->updateGUI();
-}
-
-void MineFieldWidget::raiseNeighbourWidgets(int i, int j)
-{
-    printf("MineFieldWidget::raiseNeighboursIfUnknowns(%d, %d)\n", i, j);
-
-    MineField::LocationList lst = this->_gl->getNeighbours(i, j);
-    for (size_t k = 0; k < lst.size(); k++)
-    {
-        MineFieldButton* b = this->buttons[lst[k].row][lst[k].col];
-        if (this->_gl->getCell(lst[k].row, lst[k].col).getState() == Cell::UNKNOWN)
-        {
-            b->setIcon(IconFactory::getInstance()->getIcon(Cell::UNKNOWN, 0));
-        }
-    }
-}
-
-
-void MineFieldWidget::raiseWidgetsIfUnknown(int i, int j)
-{
-    printf("MineFieldWidget::raiseWidgetsIfUnknowns(%d, %d)\n", i, j);
-
-    if (_gl->getCell(i, j).getState() == Cell::UNKNOWN)
-        buttons[i][j]->setIcon(IconFactory::getInstance()->getIcon(Cell::UNKNOWN, 0));
-}
-
-void MineFieldWidget::sinkNeighbourWidgets(int i, int j)
-{
-    printf("MineFieldWidget::sinkNeighbourWidgets(%d, %d)\n", i, j);
-
-    MineField::LocationList lst = this->_gl->getNeighbours(i, j);
-    for (size_t k = 0; k < lst.size(); k++)
-    {
-        MineFieldButton* b = this->buttons[lst[k].row][lst[k].col];
-        if (this->_gl->getCell(lst[k].row, lst[k].col).getState() == Cell::UNKNOWN)
-        {
-            b->setIcon(IconFactory::getInstance()->getIcon(Cell::KNOWN, 0));
-        }
-    }
-}
-#endif
 void MineFieldWidget::updateGUISlot(bool flag)
 {
     updateGUI(flag);

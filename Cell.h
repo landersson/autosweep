@@ -1,3 +1,4 @@
+
 #ifndef _CELL_H
 #define _CELL_H
 
@@ -27,16 +28,10 @@ public:
     bool isValidState(int state) const;
     bool isValidValue(int value) const;
 
-    int  getValue() const
-    {
-        return _value;
-    }
+    int  getValue() const;
     void setValue(int new_value);
 
-    int  getState() const
-    {
-        return _state;
-    }
+    int  getState() const;
     void setState(int new_state);
 
     // returns true if cell state is known and
@@ -53,6 +48,18 @@ private:
     int _state;                  //  state value, can be MARKED, KNOWN or UNKNOWN
 };
 
+
+//--- inline method declarations ----------------------------------------------
+
+inline int Cell::getValue() const
+{
+    return _value;
+}
+
+inline int Cell::getState() const
+{
+    return _state;
+}
 
 inline bool Cell::isNextToBombs() const
 {

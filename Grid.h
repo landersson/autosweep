@@ -11,8 +11,8 @@ template<typename C>
 class Grid
 {
 public:
-    //    typedef std::vector<Location>  LocationList;
-    typedef Neighbours LocationList;
+    typedef std::vector<Location>  LocationList;
+
 protected:
     int _rows, _cols;                            //  size of the board
     std::vector<std::vector<C> > _cells;
@@ -28,9 +28,6 @@ public:
     int   getRows() const;
     int   getCols() const;
 
-    //    template<typename T>
-    //    T getCT(int i, int j) const
-
     C& getCell(int i, int j);
     C& getCell(const Location& loc);
 
@@ -40,7 +37,7 @@ public:
     bool  empty() const;
     bool  isValidCoordinate(int i, int j) const;
 
-    LocationList getNeighbours(int i, int j) const;
+    Neighbours getNeighbours(int i, int j) const;
 
     std::string toString() const;
     bool fromStrings(const std::vector<std::string>& rows);
@@ -48,22 +45,18 @@ public:
     void fail(const char* message) const;
 };
 
+
+//--- inline method declarations ----------------------------------------------
+
 template<typename C>
 Grid<C>::Grid(int rows, int cols)
 {
     allocCells(rows, cols);
 }
 
-
 template<typename C>
 Grid<C>::~Grid()
 {
-#if 0
-    for (int i = 0; i < _rows; i++)
-        for (int j = 0; j < _cols; j++)
-            delete _cells[i][j];
-#endif
-    _cells.clear();
 }
 
 template<typename C>
@@ -84,8 +77,6 @@ void Grid<C>::allocCells(int rows, int cols)
         }
     }
 }
-
-
 
 template<typename C>
 inline bool Grid<C>::empty() const
@@ -132,9 +123,9 @@ inline const C& Grid<C>::getCell(int i, int j) const
 }
 
 template<typename C>
-typename Grid<C>::LocationList Grid<C>::getNeighbours(int i, int j) const
+Neighbours Grid<C>::getNeighbours(int i, int j) const
 {
-    LocationList res;
+    Neighbours res;
 
     for (int di = -1; di <= 1; di++)
     {

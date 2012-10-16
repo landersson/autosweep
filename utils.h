@@ -1,10 +1,13 @@
-#ifndef UTILS_H
-#define UTILS_H
+#ifndef _UTILS_H
+#define _UTILS_H
 
 #include <string>
 
-int rand_int(int a, int b);   // return random integer in the range [a-b] (including b)
-std::string int2str(int n);   // return string form of the integer
+ // return random integer in the range [a-b] (including b)
+int rand_int(int a, int b);
 
-#endif // UTILS_H
+// return string form of the integer
+std::string int2str(int n);
+
+#endif // _UTILS_H
 

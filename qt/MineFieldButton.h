@@ -1,5 +1,5 @@
-#ifndef MSBUTTON_H
-#define MSBUTTON_H
+#ifndef _MINE_FIELD_BUTTON_H
+#define _MINE_FIELD_BUTTON_H
 
 #include <QtGui>
 
@@ -8,13 +8,10 @@ class MineFieldWidget;   //forward declaration
 class MineFieldButton : public QPushButton
 {
     Q_OBJECT
-    /*
-        before starting new game, state must b 0, gui must be initialized
-    */
 private:
     int i, j;   //  location
 
-public:         //  in order to initialize...
+public:         
     MineFieldButton(QWidget* parent, int _i, int _j);
 
     void setTag(int tag)
@@ -32,4 +29,4 @@ private:
     int  _tag;
 
 };
-#endif // MSBUTTON_H
+#endif // _MINE_FIELD_BUTTON_H

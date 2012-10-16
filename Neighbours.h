@@ -1,14 +1,3 @@
-// ----------------------------------------------------------------------------
-//
-//! @brief       An utility class for generating indices based on a vector of
-//!              integers or a continous range between 0 and an end value.
-//! @note        Could be extended and generalized in a number of useful ways
-//!              but no time for that right now.
-//! @author      Lars Andersson
-//! @date        2012
-//! @copyright   National ICT Australia (NICTA). All rights reserved.
-//
-// ----------------------------------------------------------------------------
 
 #ifndef _NEIGHBOURS_H_
 #define _NEIGHBOURS_H_
@@ -49,13 +38,7 @@ private:
 class Neighbours
 {
 public:
-    //! @brief Create an index generator returning a continous range
-    //! of indices between 0 and continous_end - 1.
-
     Neighbours() : _num_locations(0) { }
-
-    //! @brief Create an index generator returning indices from given
-    //! vector of ints
 
     size_t size() const
     {
@@ -74,7 +57,7 @@ public:
         return _locations[index];
     }
 
-    // in order to use it as an iterator in range for loops
+    // define begin () in order to use it as an iterator in range for loops
     NeighboursIter begin() const
     {
         return NeighboursIter(this, 0);
@@ -115,4 +98,4 @@ inline const Location& NeighboursIter::operator*() const
 }
 
 
-#endif // _INDEXGENERATOR_H_
+#endif // _NEIGHBOURS_H_

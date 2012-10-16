@@ -6,13 +6,16 @@ struct Location
 {
     Location(int a_row = 0, int a_col = 0) : row(a_row), col(a_col) { }
 
-    bool valid() const
-    {
-        return row >= 0 && col >= 0;
-    }
+    bool valid() const;
+
     int row;
     int col;
 };
+
+inline bool Location::valid() const
+{
+    return row >= 0 && col >= 0;
+}
 
 inline bool operator ==(const Location& l1, const Location& l2)
 {

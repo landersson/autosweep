@@ -8,7 +8,6 @@
 
 GameLogic::GameLogic(): _mine_field(0), _state(GameState::STOP)
 {
-
 }
 
 GameLogic::~GameLogic()
@@ -27,20 +26,6 @@ GameState GameLogic::getState() const
     return _state;
 }
 
-#if 0
-void GameLogic::newGame(int row, int col, const Board::LocationList& lst)
-{
-    if (row < Board::MIN_ROW_NUM || col < Board::MIN_COLUMN_NUM
-        || row > Board::MAX_ROW_NUM || col > Board::MAX_COLUMN_NUM)
-        throw std::invalid_argument("invalid size of board");
-    if (_num_mines < 0 || _num_mines > row * col)
-        throw std::invalid_argument("invalid number of mines");
-    if (_mine_field) delete _mine_field;
-    this->_num_mines = lst.size();
-    _mine_field = new Board(row, col, lst);
-    setState(GameState::RUN);
-}
-#endif
 
 bool GameLogic::loadGame(const std::vector<std::string>& rows)
 {
@@ -64,13 +49,6 @@ bool GameLogic::loadGame(const std::vector<std::string>& rows)
 
 void GameLogic::newGame(int row, int col, int num)
 {
-#if 0
-    if (row < 1 || col < Board::MIN_COLUMN_NUM
-        || row > Board::MAX_ROW_NUM || col > Board::MAX_COLUMN_NUM)
-        throw std::invalid_argument("invalid size of board");
-    if (num < 0 || num > row * col)
-        throw std::invalid_argument("invalid number of mines");
-#endif
     if (_mine_field) delete _mine_field;
     this->_num_mines = num;
     _mine_field = new MineField(row, col, num);
@@ -82,25 +60,10 @@ int GameLogic::getNumMines()
     return _num_mines;
 }
 
-bool GameLogic::validState(GameState v)
-{
-    return v == GameState::RUN || v == GameState::STOP ||
-           v == GameState::WIN || v == GameState::LOSE;
-}
-
 void GameLogic::setState(GameState new_state)
-{
-    if (this->validState(new_state))
-    {
-        if (_state != new_state)
-        {
-            _state = new_state;
-        }
-    }
-    else
-        throw std::invalid_argument("unknown state for GameLogic: " + int2str((int)new_state));
+{    
+    _state = new_state;
 }
-
 
 std::string GameLogic::toString()
 {
@@ -124,7 +87,7 @@ void GameLogic::floodFillDig(int i, int j)
         fprintf(stderr, "Invalid arguments");
         return;
     }
-    MineField::LocationList lst = _mine_field->getNeighbours(i, j);
+    Neighbours lst = _mine_field->getNeighbours(i, j);
 
     _mine_field->getCell(i, j).setState(Cell::KNOWN);
 
@@ -147,17 +110,7 @@ void GameLogic::revealAll()
             this->getCell(i, j).setState(Cell::KNOWN);
 }
 
-int GameLogic::getRows()
-{
-    return _mine_field->getRows();
-}
-
-int GameLogic::getCols()
-{
-    return _mine_field->getCols();
-}
-
-MineField::LocationList GameLogic::getNeighbours(int i, int j)
+Neighbours GameLogic::getNeighbours(int i, int j)
 {
     return this->_mine_field->getNeighbours(i, j);
 }
@@ -165,13 +118,11 @@ MineField::LocationList GameLogic::getNeighbours(int i, int j)
 
 int GameLogic::getMarkedNum()
 {
-    //  count one by one...
-    //  maybe not efficient,
-    //  but I don't want to bring trouble to later maintainence
-    //  because keeping track of a counting variable in multiple functions is difficult
     if (getState() != GameState::RUN)
         return -1;
+    
     int res = 0;
+    
     for (int i = 0; i < this->getRows(); i++)
     {
         for (int j = 0; j < this->getCols(); j++)

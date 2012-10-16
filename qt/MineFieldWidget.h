@@ -1,5 +1,5 @@
-#ifndef _MS_WINDOW_H_
-#define _MS_WINDOW_H_
+#ifndef _MINE_FIELD_WIDGET_H
+#define _MINE_FIELD_WIDGET_H
 
 #include "QtGameLogic.h"
 #include "Cell.h"
@@ -25,10 +25,7 @@ public:
     void unmark(int i, int j);
     void explore(int i, int j);
     void toggle(int i, int j);
-    void sinkNeighbourWidgets(int i, int j);
     void sinkWidgetsIfUnknown(int i, int j);
-    void raiseNeighbourWidgets(int i, int j);
-    void raiseWidgetsIfUnknown(int i, int j);
 
     void createMineField(int row, int col);
     void createGameLogic();
@@ -74,9 +71,7 @@ private:
 
     bool        _show_bombs;
 
-    int        _config_index;
-
-    //    QAutoSweep* _auto_sweep;
+    int         _config_index;
 
     void mouseMoveEvent(QMouseEvent* e);
 
@@ -89,4 +84,4 @@ public slots:
     void toggleBombsSlot();
 };
 
-#endif // MSWINDOW_H
+#endif // _MINE_FIELD_WIDGET_H

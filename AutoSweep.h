@@ -62,10 +62,8 @@ private:
 
     EdgeSolver _edge_solver;
 
-
     MineField _model;
 
 };
-
 
 #endif // _AUTO_SWEEP_H
