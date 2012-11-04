@@ -1,6 +1,6 @@
 
 #include "GameLogic.h"
-#include "Log.h"
+#include "log.h"
 #include "utils.h"
 
 #include <cassert>
