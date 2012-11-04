@@ -3,7 +3,11 @@
 #define _SWEEP_MAIN_H
 
 #include "GameInterface.h"
+#include "SweepConfig.h"
+
 #include "AutoSweep.h"
+
+#include "log.h"
 
 #include <map>
 
@@ -15,16 +19,52 @@ public:
         _auto_sweeper(as)
     { }
 
-    int run(int num_games_to_play)
+    bool verifyConfig(SweepConfig& config)
     {
+        if (config.numRows() < 3 ||
+            config.numCols() < 3) return false;
+
+        // allow max 50% bombs
+        int num_cells = config.numRows() * config.numCols();
+
+        if (config.numMines() >= num_cells / 2) return false;
+
+        if (config.numGames() < 0) return false;
+
+        return true;
+    }
+    
+    int run(SweepConfig& config)
+    {
+        if (!verifyConfig(config))
+        {
+            fprintf(stderr, "SweepMain: invalid configuration\n");
+            exit(1);
+        }
+    
+        Log::print(Log::INFO, "Running %d games, size=%dx%d, mines=%d\n", 
+                   config.numGames(), config.numRows(), config.numCols(), config.numMines());
+           
+
         int games_played = 0;
         int games_won = 0;
 
         std::map<int, int> lost_at_move;
 
-        while (keepRunning() && games_played < num_games_to_play)
+
+        while (keepRunning() && games_played < config.numGames())
         {
-            _game->startNewGame(16, 16, 26);
+            if (config.isDefined("load"))
+            {
+                _game->loadGame(config.getString("load"));
+            }
+            else
+            {
+                _game->startNewGame(config.numRows(), config.numCols(), config.numMines());
+            }
+
+            _auto_sweeper->startNewGame(config.numMines());
+            
 
             int moves_in_this_game = 0;
 
@@ -32,16 +72,17 @@ public:
             {
                 _auto_sweeper->sweep(_game->getMineField());
 
-                //printf("actions = %zd\n", _auto_sweeper->getSweepActions().size());
+                _game->verifyState(_auto_sweeper);
+
+//                printf("actions = %zd\n", _auto_sweeper->getSweepActions().size());
 
                 for (const SweepAction & action : _auto_sweeper->getSweepActions())
                 {
                     _game->executeAction(action);
 
                     moves_in_this_game++;
-                }
+                }            
             }
-
 
             if (_game->getGameState() == GameState::WIN)
             {
@@ -60,12 +101,14 @@ public:
             }
         }
 
+#if 0
         float games_lost = games_played - games_won;
 
         for (auto x : lost_at_move)
         {
             printf("%3d : %3.2f\n", x.first, 100.0f * x.second / games_lost);
         }
+#endif
 
         printGamesWon(games_won, games_played);
 
@@ -80,14 +123,12 @@ public:
 protected:
     void printGamesWon(int games_won, int games_played)
     {
-        printf("won %d/%d games: %.3f%%\n", games_won, games_played,
-               100.0 * games_won / games_played);
+        Log::print(Log::INFO, "Done: won %d/%d games: %.3f%%\n", games_won, games_played,
+                   100.0 * games_won / games_played);
     }
-
-
+    
     int             _games_played;
     int             _games_won;
-
 
     GameInterface*  _game;
     AutoSweep*      _auto_sweeper;

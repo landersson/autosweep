@@ -19,7 +19,10 @@ public:
     ~MineFieldWidget();
 
     void updateGUI(bool rebuildMineField = false);
+
     void newGame(int row, int col, int num);
+    bool loadGame(const std::string& filename);
+
     void dig(int i, int j);
     void mark(int i, int j);
     void unmark(int i, int j);
@@ -27,12 +30,10 @@ public:
     void toggle(int i, int j);
     void sinkWidgetsIfUnknown(int i, int j);
 
-    void createMineField(int row, int col);
+    void createMineField();
     void createGameLogic();
     void createCompeteGameLogic();
     void initializeWidgets();
-
-    bool loadMineField(const char* filename);
 
     int cellToPixelX(int cell_x) const
     {
@@ -49,6 +50,12 @@ public:
         return _gl->getMineField();
     }
 
+    const GameLogic* getGameLogic() const
+    {
+        return _gl;
+    }
+
+
     QWidget* childAt(int x, int y)
     {
         return QWidget::childAt(cellToPixelX(x) - this->pos().x(),
@@ -59,6 +66,10 @@ public:
     {
         return _gl->getState();
     }
+
+    // debugging visualization support
+    void tagCells(const MineField::LocationList& locations, int tag);
+    void clearTags();
 
 private:
     std::vector<std::vector<MineFieldButton*> > buttons;

@@ -45,44 +45,6 @@ void MineFieldWidget::newGameSlot()
 
 }
 
-bool MineFieldWidget::loadMineField(const char* filename)
-{
-    FILE* fp = fopen(filename, "r");
-
-    if (fp == 0)
-    {
-        fprintf(stderr, "MineFieldWidget: error opening file '%s'\n", filename);
-        return false;
-    }
-
-    std::vector<std::string> rows;
-
-    char buffer[512];
-    while (0 != fgets(buffer, sizeof(buffer), fp))
-    {
-        rows.push_back(buffer);
-        printf("%s", buffer);
-    }
-
-    fclose(fp);
-
-    if (!_gl->loadGame(rows))
-    {
-        fprintf(stderr, "MineFieldWidget: error loading minefield from file '%s'\n", filename);
-        return false;
-    }
-    int row = _gl->getRows();
-    int col = _gl->getCols();
-    int num = _gl->getNumMines();
-
-    printf("%dx%dx%d\n", row, col, num);
-
-    this->updateGUI(true);
-
-    //    this->createNormalGameLogic();
-
-    return true;
-}
 
 void MineFieldWidget::toggleBombsSlot()
 {
@@ -95,7 +57,7 @@ void MineFieldWidget::toggleBombsSlot()
 
 void MineFieldWidget::createGameLogic()
 {
-    if (_gl)delete _gl;
+    if (_gl) delete _gl;
 
     _gl = new QtGameLogic();
 
@@ -113,8 +75,12 @@ void MineFieldWidget::initializeWidgets()
 }
 
 
-void MineFieldWidget::createMineField(int row, int col)
+void MineFieldWidget::createMineField()
 {
+    int row = getMineField()->getRows();
+    int col = getMineField()->getCols();
+
+
     printf("MineFieldWidget::createMineField(%d, %d)\n", row, col);
 
     for (auto bv : buttons)
@@ -166,6 +132,28 @@ void MineFieldWidget::mouseMoveEvent(QMouseEvent* e)
     printf("%d,%d", gx, gy);
 }
 
+void MineFieldWidget::tagCells(const MineField::LocationList& locations, int tag)
+{
+    for (const Location & loc : locations)
+    {
+        printf("Edge @ %d,%d\n", loc.row, loc.col);
+        MineFieldButton* b = buttons[loc.row][loc.col];
+        b->setTag(tag);
+    }
+}
+
+void MineFieldWidget::clearTags()
+{
+    for (int i = 0; i < _gl->getRows(); i++)
+    {
+        for (int j = 0; j < _gl->getCols(); j++)
+        {
+            MineFieldButton* b = buttons[i][j];
+            b->setTag(0);
+        }
+    }
+}
+
 void MineFieldWidget::updateGUI(bool rebuildMineField)
 {
     int row = _gl->getRows(), col = _gl->getCols();
@@ -180,14 +168,6 @@ void MineFieldWidget::updateGUI(bool rebuildMineField)
     //    printf("Frame Size = %dx%d\n", _frame->size().width(), _frame->size().height());
     //    printf("This  Size = %dx%d\n", size().width(), size().height());
 
-    for (int i = 0; i < row; i++)
-    {
-        for (int j = 0; j < col; j++)
-        {
-            MineFieldButton* b = buttons[i][j];
-            b->setTag(0);
-        }
-    }
 
     //    printf("num edges = %zd\n", _auto_sweep->autoSweep().getEdges().size());
 
@@ -252,18 +232,33 @@ void MineFieldWidget::newGame(int row, int col, int num)
     MineFieldButton::state = 0;
     MineFieldButton::gui = this;
 
-
     printf("MineFieldWidget::newGame(%d, %d, %d)\n", row, col, num);
 
     this->_gl->newGame(row, col, num);
-    this->createMineField(row, col);
+    this->createMineField();
     this->updateGUI(true);
 }
+
+bool MineFieldWidget::loadGame(const std::string& filename)
+{
+    // initialize static variables
+    MineFieldButton::state = 0;
+    MineFieldButton::gui = this;
+
+    printf("MineFieldWidget::loadGame(%s)\n", filename.c_str());
+
+    if (!this->_gl->loadGame(filename)) return false;
+
+    this->createMineField();
+    this->updateGUI(true);
+
+    return true;
+}
+
 
 void MineFieldWidget::winSlot()
 {
     this->updateGUI();
-
     QMessageBox::information(this, "You Win!",
                              tr("<h3>Congratulations! You win!</h3>"));
 }

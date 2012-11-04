@@ -39,6 +39,9 @@ public:
 
     Neighbours getNeighbours(int i, int j) const;
 
+    int locationToIndex(int i, int j) const;
+    Location indexToLocation(int index) const;
+
     std::string toString() const;
     bool fromStrings(const std::vector<std::string>& rows);
 
@@ -153,6 +156,20 @@ template<typename C>
 inline const C& Grid<C>::getCell(const Location& location) const
 {
     return this->getCell(location.row, location.col);
+}
+
+template<typename C>
+inline int Grid<C>::locationToIndex(int i, int j) const
+{
+    return i * _cols + j;
+}
+
+template<typename C>
+inline Location Grid<C>::indexToLocation(int index) const
+{
+    int row = index / _cols;
+    int col = index - row * _cols;
+    return Location(row, col);
 }
 
 

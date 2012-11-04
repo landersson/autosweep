@@ -1,15 +1,18 @@
 
-#ifndef _Q_GUI_CONTROLLER_H_
-#define _Q_GUI_CONTROLLER_H_
+#ifndef _QT_GAME_VIEW_H
+#define _QT_GAME_VIEW_H
 
 #include "MineFieldWidget.h"
 #include "GameInterface.h"
+#include "SweepAction.h"
 
 #include <QCursor>
 #include <QMouseEvent>
 #include <QMainWindow>
 
 #include <cassert>
+
+class AutoSweep;
 
 class QtGameView : public QWidget, public GameInterface
 {
@@ -49,30 +52,13 @@ public:
         _main_window.newGame(rows, cols, num_mines);
     }
 
-    virtual void executeAction(const SweepAction& action)
+    virtual bool loadGame(const std::string& filename)
     {
-
-        if (_main_window.getMineField()->getCell(action.getRow(), action.getCol()).getState() !=
-            Cell::UNKNOWN)
-        {
-            return;
-        }
-
-        switch (action.getAction())
-        {
-        case SweepAction::FLAG_CELL:
-            flagCell(action);
-            break;
-        case SweepAction::CLICK_CELL:
-            clickCell(action);
-            break;
-        default:
-            assert(0);
-        }
-
-        pauseGui(10);
-
+        return _main_window.loadGame(filename);
     }
+
+
+    virtual void executeAction(const SweepAction& action);
 
     const MineField* getMineField()
     {
@@ -81,10 +67,17 @@ public:
 
     virtual GameState getGameState() const
     {
-        //        return GameState::STOP;
         return _main_window.getState();
     }
 
+    virtual int getNumMines() const
+    {
+        return _main_window.getGameLogic()->getNumMines();
+    }
+
+
+    // debug methods
+    virtual void verifyState(AutoSweep *as);
 
 
 protected:
@@ -105,6 +98,19 @@ protected:
 
     void pauseGui(int ms)
     {
+        if (ms < 0) 
+        {
+            _key_pressed = false;
+            while(!_key_pressed)
+            {
+                QTime time_to_die = QTime::currentTime().addMSecs(100);
+                while (QTime::currentTime() < time_to_die)
+                    QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
+            }
+            _key_pressed = false;
+            return;
+        }
+
         QTime time_to_die = QTime::currentTime().addMSecs(ms);
         while (QTime::currentTime() < time_to_die)
             QCoreApplication::processEvents(QEventLoop::AllEvents, 100);
@@ -126,8 +132,6 @@ protected:
 
         assert(child);
 
-
-
         Qt::MouseButton qt_button;
 
         if (button == MouseButton::RIGHT)
@@ -144,14 +148,20 @@ protected:
         QApplication::sendEvent(child, &event2);
     }
 
-
+    virtual void keyPressEvent(QKeyEvent *event)
+    {
+        printf("Key Event!!\n");
+        _key_pressed = true;
+    }
 
 private:
     MineFieldWidget _main_window;
 
     int _origin_x;
     int _origin_y;
+
+    bool _key_pressed;
 };
 
 
-#endif // _Q_GUI_CONTROLLER_H_
+#endif // _QT_GAME_VIEW_H

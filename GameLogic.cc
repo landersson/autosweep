@@ -1,5 +1,6 @@
 
 #include "GameLogic.h"
+#include "Log.h"
 #include "utils.h"
 
 #include <cassert>
@@ -15,24 +16,12 @@ GameLogic::~GameLogic()
     delete _mine_field;
 }
 
-Cell& GameLogic::getCell(int i, int j)
-{
-    if (!_mine_field) throw std::runtime_error("Board has not been constructed yet");
-    return _mine_field->getCell(i, j);
-}
-
-GameState GameLogic::getState() const
-{
-    return _state;
-}
-
-
-bool GameLogic::loadGame(const std::vector<std::string>& rows)
+bool GameLogic::loadGame(const std::string& filename)
 {
     delete _mine_field;
 
     _mine_field = new MineField(2, 2, 1);
-    if (!_mine_field->fromStrings(rows)) return false;
+    if (!_mine_field->loadFromFile(filename)) return false;
 
     _num_mines = 0;
 
@@ -55,14 +44,31 @@ void GameLogic::newGame(int row, int col, int num)
     setState(GameState::RUN);
 }
 
-int GameLogic::getNumMines()
+Cell& GameLogic::getCell(const Location& loc)
 {
-    return _num_mines;
+    if (!_mine_field) throw std::runtime_error("Board has not been constructed yet");
+    return _mine_field->getCell(loc);
+}
+
+Cell& GameLogic::getCell(int i, int j)
+{
+    if (!_mine_field) throw std::runtime_error("Board has not been constructed yet");
+    return _mine_field->getCell(i, j);
+}
+
+GameState GameLogic::getState() const
+{
+    return _state;
 }
 
 void GameLogic::setState(GameState new_state)
 {    
     _state = new_state;
+}
+
+int GameLogic::getNumMines() const
+{
+    return _num_mines;
 }
 
 std::string GameLogic::toString()
@@ -116,7 +122,7 @@ Neighbours GameLogic::getNeighbours(int i, int j)
 }
 
 
-int GameLogic::getMarkedNum()
+int GameLogic::getMarkedNum() const
 {
     if (getState() != GameState::RUN)
         return -1;
@@ -127,7 +133,7 @@ int GameLogic::getMarkedNum()
     {
         for (int j = 0; j < this->getCols(); j++)
         {
-            if (getCell(i, j).getState() == Cell::FLAGGED)
+            if (_mine_field->getCell(i, j).getState() == Cell::FLAGGED)
             {
                 res++;
             }
@@ -138,7 +144,7 @@ int GameLogic::getMarkedNum()
 
 void GameLogic::dig(int i, int j)
 {
-    //    printf("GameLogic::dig(%d,%d)\n", i, j);
+    Log::print(Log::DEBUG, "GameLogic::dig(%d,%d)\n", i, j);
 
     //  need to check win & lose after calling this function
 
@@ -160,6 +166,11 @@ void GameLogic::dig(int i, int j)
     }
 
     bool bomb_hit = c.getValue() == Cell::MINE;
+
+    if (bomb_hit)
+    {
+        Log::print(Log::VERBOSE, "GameLogic::dig(%d,%d) BOOOM!!!\n", i, j);
+    }
 
     if (this->checkWin())
     {
@@ -188,7 +199,14 @@ void GameLogic::mark(int i, int j)
     if (c.getState() != Cell::UNKNOWN)
         fprintf(stderr, "Can only mark UNKNOWN cells\n");
     else
+    {
+        if (c.getValue() != Cell::MINE)
+        {
+            fprintf(stderr, "AUTO SWEEP MEGA ERROR 0x433211: Attempted to flag a cell with no mine!\n");
+            exit(1);
+        }
         c.setState(Cell::FLAGGED);
+    }
 
     if (this->checkWin())
     {

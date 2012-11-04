@@ -45,7 +45,7 @@ public:
     bool fromString(const std::string& str);
 private:
     int _value;                  //  value of the cell, can be 0-8, or -1=mine
-    int _state;                  //  state value, can be MARKED, KNOWN or UNKNOWN
+    int _state;                  //  state value, can be FLAGGED, KNOWN or UNKNOWN
 };
 
 

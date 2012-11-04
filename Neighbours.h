@@ -35,6 +35,7 @@ private:
     int               _pos;
 };
 
+//
 class Neighbours
 {
 public:

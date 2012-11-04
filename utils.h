@@ -6,7 +6,7 @@
  // return random integer in the range [a-b] (including b)
 int rand_int(int a, int b);
 
-// return string form of the integer
+// return string representation of given integer
 std::string int2str(int n);
 
 #endif // _UTILS_H

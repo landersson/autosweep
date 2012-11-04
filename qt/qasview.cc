@@ -1,20 +1,27 @@
 
 #include "SweepMain.h"
-#include "AutoSweep.h"
 #include "QtGameView.h"
+
+#include "solvers/ConstraintSweep.h"
 
 #include <QApplication>
 
-int main(int argc, char** argv)
+int main(int argc, char* argv[])
 {
-    srand(4);
+    SweepConfig config;
+
+    if (!config.initialize(argc, argv)) return 1;
 
     QApplication app(argc, argv);
 
-    AutoSweep      auto_sweep;
-    QtGameView    game;
+    srand(config.getInteger("seed"));
 
-    SweepMain sm(&game, &auto_sweep);
+    AutoSweep* auto_sweep = AutoSweep::loadSolver(config.getString("solver"));
+    if (auto_sweep == nullptr) return 1;
 
-    return sm.run(1000);
+    QtGameView game;
+
+    SweepMain sm(&game, auto_sweep);
+
+    return sm.run(config);
 }

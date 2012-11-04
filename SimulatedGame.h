@@ -5,18 +5,21 @@
 #include "GameInterface.h"
 #include "GameLogic.h"
 
+#include "log.h"
+
 #include <cassert>
 
 class SimulatedGame : public GameInterface
 {
-public:
-
+public:        
     virtual void startNewGame(int rows, int cols, int num_mines)
     {
-        //        printf("SimulatedGame::startNewGame(%d, %d, %d)\n",
-        //               rows, cols, num_mines);
-
         _gl.newGame(rows, cols, num_mines);
+    }
+
+    virtual bool loadGame(const std::string& filename)
+    {
+        return _gl.loadGame(filename);
     }
 
     virtual void executeAction(const SweepAction& action)
@@ -29,6 +32,7 @@ public:
             _gl.mark(action.getRow(), action.getCol());
             break;
         case SweepAction::CLICK_CELL:
+            verifyClick(action);
             _gl.dig(action.getRow(), action.getCol());
             break;
         default:
@@ -46,7 +50,25 @@ public:
         return _gl.getState();
     }
 
+    virtual int getNumMines() const
+    {
+        return _gl.getNumMines();
+    }
+
+
+
 protected:
+    void verifyClick(const SweepAction& action)
+    {
+        if ((_gl.getCell(action.getLocation()).getValue() == Cell::MINE) &&
+            action.isCertain())
+        {
+            Log::print(Log::ERROR, "FATAL SOLVER ERROR: certain click at %d,%d is a mine!\n",
+                       action.getRow(), action.getCol());
+            exit(1);
+        }
+    }
+
     GameLogic _gl;
 
 };

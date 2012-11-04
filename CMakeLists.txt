@@ -2,27 +2,52 @@ project(AutoSweep)
 cmake_minimum_required(VERSION 2.8)
 
 
-set(CMAKE_BUILD_TYPE "Release")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Wall -pedantic")
+#set(CMAKE_BUILD_TYPE "Release")
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Wall -Werror -Wsign-compare")
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 
-#--- autosweep/game logic base code ---
-add_library(autosweep
+#--- Game logic base code ---
+add_library(sweep-core SHARED
     utils.cc
+    log.cc
     Cell.cc
     MineField.cc
-    AutoSweep.cc
-    GameLogic.cc)
+    SharedObject.cc
+    GameLogic.cc
+    AutoSweep.cc)
 
+target_link_libraries(sweep-core
+  dl)
+
+
+#--- Basic nearest neighbour solver ---
+add_library(neighbour-sweep SHARED
+  solvers/NeighbourSweep.cc
+  )
+
+target_link_libraries(neighbour-sweep
+  sweep-core)
+
+
+
+#--- Constraint Equation based solver --- 
+add_library(constraint-sweep SHARED
+  solvers/ConstraintSweep.cc
+  )
+
+target_link_libraries(constraint-sweep
+  sweep-core)
   
+
+
 #--- command line test tool ---
 add_executable(cas
   as.cc
   )
 
-target_link_libraries(cas autosweep)
+target_link_libraries(cas sweep-core)
 
 
 # check if Qt development files are available
@@ -62,6 +87,7 @@ if(QT4_FOUND)
     qt/MineFieldWidget.cc 
     qt/MineFieldButton.cc
     qt/QtGameLogic.cc
+    qt/QtGameView.cc
 
     ${AS_MOC_QRCS}
     ${AS_MOC_SRCS}
@@ -73,7 +99,7 @@ if(QT4_FOUND)
     MACOSX_BUNDLE_ICON ${CMAKE_CURRENT_SOURCE_DIR}/icons/autosweep.icns)
 
   target_link_libraries(qasview
-    autosweep
+    sweep-core
     ${QT_LIBRARIES}
     )
 

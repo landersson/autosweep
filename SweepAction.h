@@ -13,8 +13,22 @@ public:
         CLICK_CELL
     };
 
-    SweepAction(Action action, int row, int col) : _action(action), _location(row, col) { }
-    SweepAction(Action action, const Location& loc) : _action(action), _location(loc) { }
+    enum Flags
+    {
+        CERTAIN = 1
+    };
+
+#if 0
+    SweepAction(Action action, int row, int col) :
+        _action(action), 
+        _location(row, col) 
+    { }
+#endif    
+    SweepAction(Action action, const Location& loc, unsigned flags = 0) : 
+        _action(action), 
+        _location(loc),
+        _flags(flags)
+    { }
 
     Action getAction() const
     {
@@ -35,10 +49,15 @@ public:
         return _location;
     }
 
+    bool isCertain() const
+    {
+        return _flags & CERTAIN;
+    }
 
 private:
     Action   _action;
     Location _location;
+    unsigned _flags;
 };
 
 #endif // _SWEEP_ACTION_H

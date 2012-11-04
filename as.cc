@@ -1,11 +1,43 @@
 
 #include "SweepMain.h"
-#include "AutoSweep.h"
+#include "SweepConfig.h"
 #include "SimulatedGame.h"
-
 #include "Neighbours.h"
 
+#include "solvers/ConstraintSweep.h"
+
 #include "utils.h"
+#include "log.h"
+
+void test_rand_int();
+void test_zero_probabilities();
+
+
+int main(int argc, char* argv[])
+{   
+    //test_zero_probabilities();
+    //test_rand_int();
+
+    SweepConfig config;
+
+    if (!config.initialize(argc, argv)) return 1;
+    
+    Log::setLevel(config.getInteger("log-level"));
+    Log::setOutputStream(stdout);
+
+    srand(config.getInteger("seed"));
+
+    AutoSweep* auto_sweep = AutoSweep::loadSolver(config.getString("solver"));
+
+    if (auto_sweep == nullptr) return 1;
+
+    SimulatedGame game;
+
+    SweepMain sm(&game, auto_sweep);
+
+    return sm.run(config);
+}
+
 
 // experiment to determine probabilities of opening a zero in corner/edge/center cells
 void test_zero_probabilities()
@@ -65,6 +97,7 @@ void test_zero_probabilities()
 
 }
 
+// used to verify random number generation
 void test_rand_int()
 {
     const int size = 10;
@@ -84,20 +117,4 @@ void test_rand_int()
     {
         printf("%d: %d\n", i, histogram[i]);
     }
-}
-
-
-int main()
-{
-    srand(5);
-   
-    test_zero_probabilities();
-    test_rand_int();
-
-    AutoSweep      auto_sweep;
-    SimulatedGame  game;
-
-    SweepMain sm(&game, &auto_sweep);
-
-    return sm.run(10000);
 }

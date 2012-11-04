@@ -22,6 +22,7 @@ MineFieldButton::MineFieldButton(QWidget* parent, int _i, int _j) :
 void MineFieldButton::paintEvent(QPaintEvent* e)
 {
     QPushButton::paintEvent(e);
+
     if (_tag != 0)
     {
         QBrush brush(Qt::Dense5Pattern);

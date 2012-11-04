@@ -10,7 +10,7 @@ class GameLogic
 protected:
     MineField*  _mine_field;
     GameState   _state;
-    int         _num_mines;        // mine number in the board
+    int         _num_mines; // total number of mines on the field
 
     void floodFillDig(int i, int j);
     void revealAll();
@@ -21,12 +21,12 @@ public:
     ~GameLogic();
 
     void newGame(int row, int col, int num);
-    bool loadGame(const std::vector<std::string>& rows);
+    bool loadGame(const std::string& filename);
 
-    int getRows() ;
-    int getCols() ;
-    int getNumMines() ;
-    int getMarkedNum() ;
+    int getRows() const;
+    int getCols() const;
+    int getNumMines() const;
+    int getMarkedNum() const;
 
     GameState getState() const;
 
@@ -34,6 +34,7 @@ public:
     Neighbours getNeighbours(int i, int j);
 
     Cell& getCell(int i, int j);
+    Cell& getCell(const Location& loc);
 
     MineField* getMineField();
 
@@ -56,13 +57,12 @@ inline MineField* GameLogic::getMineField()
     return _mine_field;
 }
 
-
-inline int GameLogic::getRows()
+inline int GameLogic::getRows() const
 {
     return _mine_field->getRows();
 }
 
-inline int GameLogic::getCols()
+inline int GameLogic::getCols() const
 {
     return _mine_field->getCols();
 }

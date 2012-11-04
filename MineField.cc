@@ -94,6 +94,40 @@ std::string MineField::toString() const
 }
 
 
+bool MineField::loadFromFile(const std::string& filename)
+{
+    FILE* fp = fopen(filename.c_str(), "r");
+
+    if (fp == 0)
+    {
+        fprintf(stderr, "MineField: error opening file '%s'\n", filename.c_str());
+        return false;
+    }
+
+    std::vector<std::string> rows;
+
+    char buffer[512];
+    while (0 != fgets(buffer, sizeof(buffer), fp))
+    {
+        rows.push_back(buffer);
+        printf("%s", buffer);
+    }
+
+    fclose(fp);
+
+    if (!fromStrings(rows))
+    {
+        fprintf(stderr, "MineField: error loading minefield from file '%s'\n", filename.c_str());
+        return false;
+    }
+
+//    printf("%dx%dx%d\n", _rows, _cols, _num);
+
+    return true;
+}
+
+
+
 bool MineField::fromStrings(const std::vector<std::string>& strings)
 {
     if (strings.size() < 3) return false;

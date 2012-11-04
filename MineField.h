@@ -21,9 +21,13 @@ public:
     // randomly fill in <num> mines into board
     void randomlyFillMines(int num);
 
+    bool loadFromFile(const std::string& filename);
+
     std::string toString() const;
     bool fromStrings(const std::vector<std::string>& rows);
 
+
+private:
     void fail(const char* message) const;
 };
 
