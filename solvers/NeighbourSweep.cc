@@ -15,8 +15,8 @@ bool NeighbourSweep::sweep(const MineField* mf)
     // select random unknown cell
     while (true)
     {
-        int i = rand_int(0, mf->getRows() - 1);
-        int j = rand_int(0, mf->getCols() - 1);
+        int i = utils::rand_int(0, mf->getRows() - 1);
+        int j = utils::rand_int(0, mf->getCols() - 1);
 
         //        printf("%d, %d\n", i, j);
 

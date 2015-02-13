@@ -54,6 +54,7 @@ public:
 
         while (keepRunning() && games_played < config.numGames())
         {
+#if 0
             if (config.isDefined("load"))
             {
                 _game->loadGame(config.getString("load"));
@@ -62,13 +63,16 @@ public:
             {
                 _game->startNewGame(config.numRows(), config.numCols(), config.numMines());
             }
+#else
+            _game->startNewGame(config.numRows(), config.numCols(), config.numMines());
+#endif
 
             _auto_sweeper->startNewGame(config.numMines());
             
 
             int moves_in_this_game = 0;
 
-            while (_game->getGameState() == GameState::RUN)
+            while (_game->getGameState() == GameState::RUNNING)
             {
                 _auto_sweeper->sweep(_game->getMineField());
 
@@ -84,7 +88,7 @@ public:
                 }            
             }
 
-            if (_game->getGameState() == GameState::WIN)
+            if (_game->getGameState() == GameState::WON)
             {
                 games_won++;
             }
@@ -95,9 +99,9 @@ public:
 
             games_played++;
 
-            if ((games_played % 10) == 0)
+            if ((games_played % 1) == 0)
             {
-                // printGamesWon(games_won, games_played);
+                //              printGamesWon(games_won, games_played);
             }
         }
 

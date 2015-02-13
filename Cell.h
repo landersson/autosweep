@@ -4,15 +4,17 @@
 
 #include <string>
 
+/*!
+ * \class Cell
+ * \brief Represents a single MineField element  
+ */
 class Cell
 {
 public:
-    Cell();
-
     enum
     {
         // for value
-        MINE = -1          // not 0 - 9
+        MINE = -1          
     };
     enum
     {
@@ -21,6 +23,8 @@ public:
         UNKNOWN  = 2,
         KNOWN    = 3
     };
+
+    Cell(int value = 0, int state = UNKNOWN);
 
     bool operator==(const Cell& c) const;
     bool operator!=(const Cell& c) const;
@@ -44,8 +48,8 @@ public:
     // parse Cell state/value from textual string
     bool fromString(const std::string& str);
 private:
-    int _value;                  //  value of the cell, can be 0-8, or -1=mine
-    int _state;                  //  state value, can be FLAGGED, KNOWN or UNKNOWN
+    int _value;  // value of the cell, can be 0-8, or -1=mine
+    int _state;  // state value, can be FLAGGED, KNOWN or UNKNOWN
 };
 
 

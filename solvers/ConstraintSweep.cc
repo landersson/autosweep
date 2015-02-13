@@ -1,25 +1,84 @@
 
 #include "ConstraintSweep.h"
+#include "ProbCalc.h"
+
 #include "utils.h"
+
+#include <set>
+
 
 bool ConstraintSweep::sweep(const MineField* mf)
 {
+    Log::print(Log::VERBOSE, "ConstraintSweep::sweep() ENTER\n");
     _actions.clear();
 
     updateModel(mf);
-
-    if (!_actions.empty()) return true;
 
     _cst_solver.solve(&_model, _actions);
 
     if (_actions.empty())
     {
-        Log::print(Log::VERBOSE, "No actions created, taking random guess\n");
-        selectFirstUnknown(mf);
+        ProbCalc pcalc;
+
+        pcalc.calculateProbabilities(&_model,
+                                     _cst_solver.getConstraintSets(),
+                                     _mines_left, _actions);
+
+        if (_actions.empty())
+        {
+            Log::print(Log::VERBOSE, "No actions created, taking random guess\n");
+            selectFirstUnknown(mf);
+        }
     }
+
+    removeDuplicateActions();
+
+    for (const SweepAction& action : _actions)
+    {
+        if (action.getAction() == SweepAction::FLAG_CELL)
+        {
+            _mines_left--;
+            if (_mines_left < 0)
+            {
+                printf("MEGA ERROR 54: Mines left = %d\n", _mines_left);
+                exit(1);
+            }
+        }
+    }
+
+    Log::print(Log::VERBOSE, "ConstraintSweep::sweep() num actions = %d\n", _actions.size());
+    Log::print(Log::VERBOSE, "ConstraintSweep::sweep() LEAVE\n\n\n");
+
+
 
     return true;
 }
+
+// remove actions applying to the same grid location
+void ConstraintSweep::removeDuplicateActions()
+{
+    std::vector<SweepAction>::const_iterator r;
+	std::vector<SweepAction>::iterator w ;
+
+	std::set<Location> locations_already_found;
+
+	for (r = _actions.begin(), w = _actions.begin(); r != _actions.end() ; ++r)
+	{
+        // <std::set>.insert() returns a tuple, of which the second item is a bool
+        // indicating if the value was inserted (true), or already in the set
+        // and thus not inserted (false)
+
+        bool inserted = locations_already_found.insert(r->getLocation()).second;
+
+		if (inserted)
+		{
+			*w++ = *r ;
+		}
+	}
+
+	_actions.erase(w , _actions.end());
+}
+
 
 void ConstraintSweep::updateModel(const MineField* mf)
 {
@@ -44,11 +103,14 @@ void ConstraintSweep::updateModel(const MineField* mf)
 
 void ConstraintSweep::selectFirstUnknown(const MineField* mf)
 {
+    printf("GAH!\n");
+    exit(3);
+#if 1
     // try to click a corner
-    if (clickIfUnknown(mf, mf->getRows() - 1, mf->getCols() - 1)) return;
-    if (clickIfUnknown(mf, 0, mf->getCols() - 1)) return;
-    if (clickIfUnknown(mf, mf->getRows() - 1, 0)) return;
-    if (clickIfUnknown(mf, 0, 0)) return;
+//    if (clickIfUnknown(mf, mf->getRows() - 1, mf->getCols() - 1)) return;
+//    if (clickIfUnknown(mf, 0, mf->getCols() - 1)) return;
+//    if (clickIfUnknown(mf, mf->getRows() - 1, 0)) return;
+//    if (clickIfUnknown(mf, 0, 0)) return;
 
     
     // try to click an edge
@@ -67,17 +129,18 @@ void ConstraintSweep::selectFirstUnknown(const MineField* mf)
 
     if (!edges.empty())
     {
-        unsigned index = rand_int(0, edges.size() - 1);
+        unsigned index = utils::rand_int(0, edges.size() - 1);
         assert(index < edges.size());
         _actions.push_back(SweepAction(SweepAction::CLICK_CELL, edges[index]));
         return;        
     }
+#endif
 
     // select random internal cell
     while (true)
     {
-        int i = rand_int(0, mf->getRows() - 1);
-        int j = rand_int(0, mf->getCols() - 1);
+        int i = utils::rand_int(0, mf->getRows() - 1);
+        int j = utils::rand_int(0, mf->getCols() - 1);
 
         //        printf("%d, %d\n", i, j);
 

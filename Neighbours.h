@@ -11,8 +11,8 @@ class Neighbours;
 class NeighboursIter
 {
 public:
-    NeighboursIter(const Neighbours* index_gen, int pos) :
-        _index_gen(index_gen),
+    NeighboursIter(const Neighbours* neighbours, int pos) :
+        _neighbours(neighbours),
         _pos(pos)
     { }
 
@@ -21,7 +21,6 @@ public:
         return _pos != other._pos;
     }
 
-    //    Location& operator* ();
     const Location& operator* () const;
 
     const NeighboursIter& operator++ ()
@@ -31,11 +30,15 @@ public:
     }
 
 private:
-    const Neighbours* _index_gen;
+    const Neighbours* _neighbours;
     int               _pos;
 };
 
-//
+/*!
+ * \class Neighbours
+ * \brief Container specialized to contain the location 
+ *        of a grid cells immediate neighbours  
+ */
 class Neighbours
 {
 public:
@@ -58,7 +61,7 @@ public:
         return _locations[index];
     }
 
-    // define begin () in order to use it as an iterator in range for loops
+    // define begin() in order to use it as an iterator in range for loops
     NeighboursIter begin() const
     {
         return NeighboursIter(this, 0);
@@ -67,11 +70,6 @@ public:
     NeighboursIter end() const
     {
         return NeighboursIter(this, _num_locations);
-    }
-
-    void push_back(const Location& location)
-    {
-        addLocation(location);
     }
 
     void addLocation(const Location& location)
@@ -89,13 +87,13 @@ private:
 #if 0
 inline Location& NeighboursIter::operator*()
 {
-    return _index_gen->operator[](_pos);
+    return _neighbours->operator[](_pos);
 }
 #endif
 
 inline const Location& NeighboursIter::operator*() const
 {
-    return _index_gen->operator[](_pos);
+    return _neighbours->operator[](_pos);
 }
 
 

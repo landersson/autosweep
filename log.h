@@ -23,6 +23,7 @@ void setOutputStream(FILE *fp);
 bool setOutputFile(const std::string& filename);
 void print(unsigned level, const char *format, ...);
 
+void info(const char *format, ...);
 void verbose(const char *format, ...);
 
 }

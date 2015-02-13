@@ -4,7 +4,7 @@
 #include <sstream>
 #include <stdexcept>
 
-Cell::Cell() : _value(0), _state(UNKNOWN) { }
+Cell::Cell(int value, int state) : _value(value), _state(state) { }
 
 bool Cell::operator ==(const Cell& c) const
 {

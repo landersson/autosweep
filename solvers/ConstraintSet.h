@@ -11,61 +11,87 @@
 #include <vector>
 #include <algorithm>
 #include <map>
+#include <cmath>
+
+#include <assert.h>
 
 //--- ConstrainSet ------------------------------------------------------------
 //
-// This class describes a set of constraint equations, i.e:
+// This class describes a set of interdependent constraint equations, i.e:
 // 
 //    x1 + x3 + x5 + ... + x6 = 3
 //    x4 + x6 + x7 + ... + x9 = 2
 //    ...
 //
-//    In this application, x's are assumed to be boolean.
+//    In this application, x's are assumed to be boolean, i.e 0 or 1.
 //-----------------------------------------------------------------------------   
-struct ConstraintSet
+class ConstraintSet
 {
+public:
+    struct Solution
+    {
+        Solution(const std::vector<bool> & xvec) : xs(xvec)
+        {
+            sum = std::count(xs.begin(), xs.end(), true);
+        }
 
+        // number of mines, i.e sum of x's = 1
+        int sum;
+
+        std::vector<bool> xs;
+    };
+
+
+private:
     //--- Variables -----------------------------------------------------------
+    std::vector<Constraint>           _constraints;
 
-    std::vector<Constraint> constraints;
 
-    // combined set of x variables (throughout all constraints) in this set
-    std::vector<int>        members;
+    // combined set of x variables (througout all constraints) in this set
+    std::vector<int>                  _members;
 
     // for each variable x<i>, 'var_cst_map[i]' refers to a vector of
     // indices (into the 'constraints' vector), listing which
     // Constraints are dependent on x<i>.
     std::map<int, std::vector<int> >  var_cst_map;
+    
     std::map<int, int>                original_indices;      
-
+    
     // backtracking statistics
     uint64_t nodes_visited;
 
+
+public:
+    
     // solutions satisfying all constraints in this set
-    std::vector<std::vector<bool> > solutions;
+    std::vector<Solution>             solutions;
+
+    
+    std::map<int, std::vector<const Solution *> > solutions_with_num_bombs;
 
 
     //--- Methods -------------------------------------------------------------
 
+public:
+
+    // This method will localise the variable indices 
     void localizeIndices()
     {
-        std::map<int, int>    new_indices;      
-        for (unsigned i = 0; i < members.size(); i++)
+        std::map<int, int> new_indices;      
+        
+        for (unsigned i = 0; i < _members.size(); i++)
         {
-            original_indices[i] = members[i];
-            new_indices[members[i]] = i;        
+            original_indices[i] = _members[i];
+            new_indices[_members[i]] = i;        
         }
-        for (unsigned i = 0; i < members.size(); i++)
+        for (unsigned i = 0; i < _members.size(); i++)
         {
-            members[i] = new_indices[members[i]];
+            _members[i] = new_indices[_members[i]];
         }
-
-        for (Constraint &cst : constraints)
+        for (Constraint &cst : _constraints)
         {
-            cst.fixIndices(new_indices);
+            cst.remapIndices(new_indices);
         }
-
-//        sort(members.begin(), members.end();
     }
 
     ConstraintSet() : nodes_visited(0) 
@@ -83,17 +109,16 @@ struct ConstraintSet
         {
             if (!containsX(xi))
             {
-                members.push_back(xi);
+                _members.push_back(xi);
             }
         }
-        constraints.push_back(c);
+        _constraints.push_back(c);
     }
 
     // returns true if x<i> is part of this constraint set
     bool containsX(int i) const
     {
-        return std::find(members.begin(), members.end(), i) != 
-            members.end();
+        return std::find(_members.begin(), _members.end(), i) != _members.end();
     }
 
     // returns true if any x in given Constraint 'c' is a member of this set.
@@ -106,14 +131,14 @@ struct ConstraintSet
         return false;
     }
 
-
+    
     void setupVarToCstMapping()
     {
-        for(int xi : members)
+        for (int xi : _members)
         {
-            for (unsigned c_index = 0; c_index < constraints.size(); c_index++)
+            for (unsigned c_index = 0; c_index < _constraints.size(); c_index++)
             {
-                if (constraints[c_index].containsX(xi))
+                if (_constraints[c_index].containsX(xi))
                 {
                     var_cst_map[xi].push_back(c_index);
                 }
@@ -125,8 +150,8 @@ struct ConstraintSet
     {
         for (auto x : var_cst_map)
         {
-            std::string s= "x";
-            s += int2str(x.first);
+            std::string s = "      x";
+            s += utils::int2str(x.first);
             Log::print(Log::VERBOSE, "%3s : ", s.c_str());
             
             for (int i : x.second)
@@ -154,35 +179,47 @@ struct ConstraintSet
         }
 
         Log::print(Log::VERBOSE, "Backtracking %d high tree done, found %d solutions\n", 
-                   members.size(), solutions.size());
+                   _members.size(), solutions.size());
         
-        int total_nodes = 2 << members.size();
+        double total_nodes = std::pow(2.0, (double)_members.size() + 1);
 
-        float percentage_visited = 100.0 * nodes_visited / total_nodes;
+        double percentage_visited = 100.0 * nodes_visited / total_nodes;
             
-        Log::print(Log::VERBOSE, "   Nodes visited = %d/%d (%.2f%%)\n",
+        Log::print(Log::VERBOSE, "   Nodes visited = %d/%.0f (%.2f%%)\n",
                    nodes_visited, total_nodes, percentage_visited);
+
+        for (const Solution & solution : solutions)
+        {
+            solutions_with_num_bombs[solution.sum].push_back(&solution);
+        }
+                
+        for (auto x : solutions_with_num_bombs)
+        {
+            Log::print(Log::VERBOSE, "   %d bombs => %d solutions\n",
+                       x.first, x.second.size());
+        }
     }
 
     // classic backtracking algorithm...
     void backtrack(std::vector<bool>& state)
     {
-        if (state.size() == members.size())
+        if (state.size() == _members.size())
         {
             // found a solution!
 #if 0
-            Log::print(Log::VERBOSE, "backtrack() found solution: ");
+            Log::print(Log::DEBUG, "backtrack() found solution: ");
             
             int i = 0;
             int n = 0;
             for (bool b : state) 
             {
-                Log::print(Log::VERBOSE, "x%d=%d ", i++, (int)b);
+                Log::print(Log::DEBUG, "x%d=%d ", i++, (int)b);
                 if (b) n++;
             }
-            Log::print(Log::VERBOSE, " n=%d\n", n);
+            Log::print(Log::DEBUG, " n=%d\n", n);
 #endif
-            solutions.push_back(state);
+            solutions.push_back(Solution(state));
+            
             return;
         }
 
@@ -204,7 +241,7 @@ struct ConstraintSet
     // returns true if, given the the state of x0 - x<n-1> in 'current_xs'
     // the state of x<n> in 'next_x' can be rejected as a possible solution
     // to the current set of constraints
-    bool rejectable(bool next_x, const std::vector<bool>& current_xs)
+    bool rejectable(bool next_x, const std::vector<bool> & current_xs)
     {
         nodes_visited++;
 
@@ -213,7 +250,7 @@ struct ConstraintSet
         for (int cst_index : var_cst_map[x_n])
         {
 //            printf("CONSTRANT SET %d\n", cst_index);
-            if (constraints[cst_index].rejectable(next_x, current_xs))
+            if (_constraints[cst_index].rejectable(next_x, current_xs))
                 return true;
         }
 
@@ -223,50 +260,70 @@ struct ConstraintSet
     // verify that all solutions found are actually correct
     bool verifySolutions()
     {
-        for(const std::vector<bool>& solution : solutions)
+        for(const Solution& solution : solutions)
         {
-            for (const Constraint& cst : constraints)
+            for (const Constraint& cst : _constraints)
             {
-                if (!cst.isValidSolution(solution)) return false;
+                if (!cst.isValidSolution(solution.xs)) return false;
             }
         }
         return true;
     }
 
-    
+    const std::vector<Location> getMemberLocations(const GridSize & grid) const
+    {
+        std::vector<Location> locations;        
+
+        for (const auto & index : original_indices)
+        {
+            locations.push_back(grid.indexToLocation(index.second));
+        }
+        return locations;
+    }
+
+
+    Location getMemberLocation(int member_index, const GridSize & grid) const
+    {
+        const auto it = original_indices.find(member_index);
+        
+        if (it == original_indices.end()) assert(0);
+
+        return grid.indexToLocation(it->second);
+    }
+
     void createSafeClicks(std::vector<SweepAction>& actions, int cols)
     {
-        int mine_count[members.size()];
+        int mine_count[_members.size()];
 
-        for (unsigned i = 0; i < members.size(); i++)
+        for (unsigned i = 0; i < _members.size(); i++)
         {
             mine_count[i] = 0;
         }
 
-        for(const std::vector<bool>& solution : solutions)
+        for(const Solution& solution : solutions)
         {
-            for (unsigned i = 0; i < solution.size(); i++)
+            for (unsigned i = 0; i < solution.xs.size(); i++)
             {
-                mine_count[i] += solution[i];
+                mine_count[i] += solution.xs[i];
             }
         }
         
-        for (unsigned i = 0; i < members.size(); i++)
+        for (unsigned i = 0; i < _members.size(); i++)
         {
-            int index = original_indices[members[i]];
+            int index = original_indices[_members[i]];
             int row = index / cols;
             int col = index - row * cols;
 
             if (mine_count[i] == 0)
             {
-                Log::print(Log::DEBUG, "   clicking %d\n", index);
+                Log::print(Log::DEBUG, "   safe clicking %d\n", index);
                 actions.push_back(SweepAction(SweepAction::CLICK_CELL, 
                                               Location(row, col),
                                               SweepAction::CERTAIN));
             }
             else if (mine_count[i] == (int)solutions.size())
             {
-                Log::print(Log::DEBUG, "   flagging %d (%d)\n", index, members[i]);
+                Log::print(Log::INFO, "   safe flagging %d (%d)\n", index, _members[i]);
 #if 1
                 actions.push_back(SweepAction(SweepAction::FLAG_CELL, 
                                               Location(row, col),
@@ -274,12 +331,12 @@ struct ConstraintSet
 #endif
             }
         }
-
+#if 0
         if (0 && actions.empty())
         {
-            int min_index = std::min_element(mine_count, mine_count + members.size()) - mine_count;
+            int min_index = std::min_element(mine_count, mine_count + _members.size()) - mine_count;
 
-            int index = original_indices[members[min_index]];
+            int index = original_indices[_members[min_index]];
             int row = index / cols;
             int col = index - row * cols;
 
@@ -288,18 +345,22 @@ struct ConstraintSet
                                           Location(row, col)));
 
         }
+#endif
     }
-    
-    // merge Constraints from given set into this set
+
+    // merge constraints from given set into this set
     void mergeConstraintSet(const ConstraintSet& cset);
 
-    // returns true any of the variables in this set exists in given set 'other'
+    // returns true if any of the variables in this set exists in given set 'other'
     bool overlaps(const ConstraintSet& other);
 
-
-    const std::vector<int>& getMembers() 
+    const std::vector<int>& getMembers() const
+    {
+        return _members;
+    }
+    int numMembers() const 
     { 
-        return members; 
+        return _members.size(); 
     }
 
 };
@@ -307,7 +368,7 @@ struct ConstraintSet
 
 inline void ConstraintSet::mergeConstraintSet(const ConstraintSet& cset)
 {
-    for (const Constraint& c : cset.constraints)
+    for (const Constraint& c : cset._constraints)
     {
         this->addConstraint(c);
     }
@@ -316,7 +377,7 @@ inline void ConstraintSet::mergeConstraintSet(const ConstraintSet& cset)
 
 inline bool ConstraintSet::overlaps(const ConstraintSet& other)
 {
-    for (int i : members)
+    for (int i : _members)
     {
         if (other.containsX(i)) return true;
     }

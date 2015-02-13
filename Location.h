@@ -9,6 +9,8 @@ struct Location
 
     bool valid() const;
 
+//    bool operator== (const Location& other) const;
+    
     int row;
     int col;
 };

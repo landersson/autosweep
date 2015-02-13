@@ -3,6 +3,8 @@
 
 #include "ConstraintSet.h"
 
+#include <algorithm>
+
 class ConstraintSolver
 {
     int      num_csets;
@@ -14,6 +16,7 @@ class ConstraintSolver
     std::vector<Constraint>    _constraints;
     std::vector<ConstraintSet> _csets;
 
+    const MineField* _mf;
 public:
 
     ConstraintSolver(const MineField* mf = 0) : _mf(mf) 
@@ -26,127 +29,55 @@ public:
         max_cset_size = 0;
     }
 
+    // This method creates a set of constraints given the current state of the mine field.
+    // Constraints are created for cells with a known number of neighbouring mines that have
+    // more than one unknown neighbour cell. I.e, if cell C is known to have 2 neighbouring 
+    // mines and 4 unkown neighbours N1-N2, we can create the constraint:
+    //
+    //    N1 + N2 + N2 + N2 = 2, 
+    //
+    // where N<n> = 1 if cell n contains a mine, or zero otherwise
+
     void createConstraints()
     {
-        for (int i = 0; i < _mf->getRows(); i++)
-        {
-            for (int j = 0; j < _mf->getCols(); j++)
-            {
-                const Cell& c = _mf->getCell(i, j);
-
-                if (c.getState() != Cell::KNOWN) continue;
-
-                Neighbours neighbours = _mf->getNeighbours(i, j);
-                
-                if (8 == countState(neighbours, Cell::KNOWN)) continue;
-                
-                Constraint new_constraint(Location(i, j), c.getValue());
-
-                for (Location loc : neighbours)
-                {
-                    const Cell& n = _mf->getCell(loc);
-             
-                    if (n.getState() == Cell::UNKNOWN)
-                    {
-                        int cell_index = _mf->locationToIndex(loc.row, loc.col);
-
-                        new_constraint.addX(cell_index);
-                    }
-                    else if (n.getState() == Cell::FLAGGED) 
-                    {
-                        new_constraint.C--;
-                    }
-                }
-
-                if (!new_constraint.xs.empty())
-                {
-                    std::sort(new_constraint.xs.begin(), new_constraint.xs.end());
-
-                    _constraints.push_back(new_constraint);
-                }
-            }
-        }
-    }
-
-    bool solve(const MineField *mf, std::vector<SweepAction>& actions)
-    {
-        _mf = mf;
-
-        _constraints.clear();
-
-        createConstraints();
-
-        if (_constraints.empty()) return false;
-
-
-//        printConstraints(_constraints);
-
-        setupActions(actions);
-
-        if (!actions.empty()) return true;
-
-        int iter = 0;
-        while (simplifyConstraints())
-        {
-            Log::print(Log::DEBUG, "*** Simplify ITER %d\n", iter++);
-        }
-
-        deleteEmptyConstraints();
-        
-        setupActions(actions);
-        if (!actions.empty()) return true;
-        
-        Log::print(Log::VERBOSE, "Simplified:\n");
-        printConstraints(_constraints);
-
-
-        separateConstraints();
-
-        int set_index = 0;
-        Log::print(Log::VERBOSE, "\nConstraint Sets: %d\n", _csets.size());
-        for (ConstraintSet& cset : _csets)
-        {
-            cset.localizeIndices();
-            Log::print(Log::VERBOSE, "--- Set %d -------------------------\n", set_index++);
-            printConstraints(cset.constraints);
-
-            Log::print(Log::VERBOSE, "Variable -> Constraints Mapping:\n", 
-                       (int)cset.members.size());
-            cset.setupVarToCstMapping();
-            cset.printCells();
-            Log::print(Log::VERBOSE, "\n");
-        }
-        Log::print(Log::VERBOSE, "------------------------------------\n");
-
-        unsigned total_num_solutions = 1;
-
-        for (ConstraintSet& cset : _csets)
-        {
-            cset.findSolutions();
-
-            cset.createSafeClicks(actions, _mf->getCols());
+        for (auto git = _mf->begin(); git != _mf->end(); ++git)
+        {            
+            const Cell& c = *git; 
             
-            num_csets++;
-            cset_size += cset.members.size();
-            nodes_visited += cset.nodes_visited;
-            total_nodes += (2 << cset.members.size());
-
-            if (cset.members.size() > (unsigned)max_cset_size)
+            if (c.getState() != Cell::KNOWN) continue;
+            
+            Neighbours neighbours = _mf->getNeighbours(git.getLocation().row,
+                                                       git.getLocation().col);
+            
+            if (8 == countState(neighbours, Cell::KNOWN)) continue;
+            
+            Constraint new_constraint(git.getLocation(), c.getValue());
+            
+            for (Location loc : neighbours)
             {
-                max_cset_size = cset.members.size();
+                const Cell& n = _mf->getCell(loc);
+                
+                if (n.getState() == Cell::UNKNOWN)
+                {
+                    int cell_index = _mf->locationToIndex(loc.row, loc.col);
+                    
+                    new_constraint.addX(cell_index);
+                }
+                else if (n.getState() == Cell::FLAGGED) 
+                {
+                    new_constraint.C--;
+                }
             }
-
-            total_num_solutions *= cset.members.size();
-
+            
+            if (!new_constraint.xs.empty())
+            {
+                std::sort(new_constraint.xs.begin(), new_constraint.xs.end());
+                
+                _constraints.push_back(new_constraint);
+            }
         }
-        if (actions.empty())
-        {
-            Log::print(Log::VERBOSE, "Num solution permutations: %d\n", total_num_solutions);
-        }
-        
-
-        return true;
     }
+
 
     void printConstraints(const std::vector<Constraint> &constraints)
     {
@@ -164,7 +95,16 @@ public:
         }
     }
 
-    // simplyfy constraints by merging sets that are subsets of eachother
+    // This method simplifies the list of constraints by merging constraints that 
+    // are subsets of each other. For example, the constraints,
+    //
+    //    C1: x1 + x4 + x5 + x6 = 3
+    //    C2: x4 + x6 = 2
+    //
+    // will be merged and simplified into:
+    //
+    //    C1: x1 + x5 = 1
+
     bool simplifyConstraints()
     {
         int simplified = false;
@@ -195,7 +135,23 @@ public:
     }
 
 
-    // separate simplified constraints into independent sets
+    // This method separate constraints into independent sets. Example:
+    //
+    //  Constraints:
+    //        C1: x1 + x2      = 2
+    //        C2: x2 + x4 + x5 = 1
+    //        C3: x6 + x7      = 3
+    //
+    // Constraint 1 and 2 are clearly interdependant because they share a common
+    // variable c2, while constraint 3 is independent. This set of contraints would
+    // be split into two sets with the first containing C1 and C2, and the second C3.
+    //
+    // The main reason for doing this is speed. The set of final solutions should be 
+    // the same regardless of if we solve all constraints as a single, large set of
+    // contraints or solve each independent subset individually. However, the number 
+    // of possible solutions that needs to be tested will be significantly less if
+    // we separate constraints into independent sets.
+
     void separateConstraints()
     {
         _csets.clear();
@@ -214,7 +170,7 @@ public:
         {
             std::vector<int> found_in_sets;
 
-            // find out which existint sets Constraint 'c' overlaps
+            // find out which existing sets Constraint 'c' overlaps
             for (unsigned i = 0; i <  _csets.size(); i++)
             {
                 if (_csets[i].overlaps(c))
@@ -250,7 +206,7 @@ public:
             }
         }
 
-        // verify that no set overlaps another
+        // verify that no set overlaps another set
         for (unsigned i = 0; i < _csets.size() - 1; i++)
         {
             for (unsigned j = i + 1; j < _csets.size(); j++)
@@ -265,7 +221,85 @@ public:
         }
     }
 
-    void setupActions(std::vector<SweepAction>& actions)
+    bool solve(const MineField *mf, std::vector<SweepAction>& actions)
+    {
+        _mf = mf;
+
+        _constraints.clear();
+        _csets.clear();
+
+        createConstraints();
+
+        if (_constraints.empty()) return false;
+
+//        printConstraints(_constraints);
+
+        if (findSafeActions(actions)) return true;
+
+        int iter = 0;
+        while (simplifyConstraints())
+        {
+            Log::print(Log::DEBUG, "*** Simplify ITER %d\n", iter++);
+        }
+
+        deleteEmptyConstraints();
+
+        if (findSafeActions(actions)) return true;
+
+        Log::print(Log::VERBOSE, "Simplified:\n");
+        printConstraints(_constraints);
+
+        separateConstraints();
+
+        int set_index = 0;
+        Log::print(Log::VERBOSE, "\nConstraint Sets: %d\n", _csets.size());
+        for (ConstraintSet& cset : _csets)
+        {
+            cset.localizeIndices();
+            Log::print(Log::VERBOSE, "--- Set %d -------------------------\n", set_index++);
+//            printConstraints(cset.constraints);
+
+            Log::print(Log::DEBUG, "   Variable -> Constraints Mapping:\n", 
+                       (int)cset.getMembers().size());
+            cset.setupVarToCstMapping();
+//            cset.printCells();
+            Log::print(Log::DEBUG, "\n");
+        }
+        Log::print(Log::VERBOSE, "------------------------------------\n");
+
+        unsigned total_num_solutions = 1;
+
+        for (ConstraintSet& cset : _csets)
+        {
+            cset.findSolutions();
+
+            cset.createSafeClicks(actions, _mf->getCols());
+            
+            num_csets++;
+            cset_size += cset.getMembers().size();
+//            nodes_visited += cset.nodes_visited;
+            total_nodes += (2 << cset.getMembers().size());
+
+            if (cset.getMembers().size() > (unsigned)max_cset_size)
+            {
+                max_cset_size = cset.getMembers().size();
+            }
+
+            total_num_solutions *= cset.solutions.size();
+        }
+
+        if (actions.empty())
+        {
+            Log::print(Log::VERBOSE, "Num solution permutations: %d\n", total_num_solutions);
+        }
+        
+
+        return true;
+    }
+
+    // Check if any of the constraints in the list are simple enough to
+    // say for sure that certain cells does/doesn't contain bombs
+    bool findSafeActions(std::vector<SweepAction> & actions)
     {
         for (const Constraint& c : _constraints)
         {
@@ -274,7 +308,7 @@ public:
                 // all boolean variables must be zero
                 for (int index : c.xs)
                 {
-                    Log::print(Log::VERBOSE, "   clicking %d\n", index);
+                    Log::print(Log::DEBUG, "   clicking %d\n", index);
                     actions.push_back(SweepAction(SweepAction::CLICK_CELL, 
                                                   _mf->indexToLocation(index),
                                                   SweepAction::CERTAIN));
@@ -285,13 +319,19 @@ public:
                 // all boolean variables must be true
                 for (int index : c.xs)
                 {
-                    Log::print(Log::VERBOSE, "   flagging %d\n", index);
+                    Log::print(Log::DEBUG, "   flagging %d\n", index);
                     actions.push_back(SweepAction(SweepAction::FLAG_CELL, 
                                                   _mf->indexToLocation(index),
                                                   SweepAction::CERTAIN));
                 }
             }
         }
+        return !actions.empty();
+    }
+
+    const std::vector<ConstraintSet> & getConstraintSets() const
+    {
+        return _csets;
     }
 
     void printCombinedStats()
@@ -302,10 +342,8 @@ public:
         printf("   Average visit ratio: %.5f%%\n", 100.0 * nodes_visited / total_nodes); 
     }
 
-
-
 private:
-
+ 
     void deleteEmptyConstraints()
     {
         std::vector<Constraint> constraints2 = _constraints;
@@ -343,7 +381,7 @@ private:
         return true;
     }
 
-
+    // return the number of cells in the Neighbours list that are in the given state.
     int countState(const Neighbours& cells, int state)
     {
         int count = 0;
@@ -359,7 +397,6 @@ private:
         return count;
     }
 
-    const MineField* _mf;
 };
 
 

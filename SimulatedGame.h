@@ -24,7 +24,7 @@ public:
 
     virtual void executeAction(const SweepAction& action)
     {
-        if (_gl.getCell(action.getRow(), action.getCol()).getState() != Cell::UNKNOWN) return;
+        if (_gl.getCell(action.getLocation()).getState() != Cell::UNKNOWN) return;
 
         switch (action.getAction())
         {

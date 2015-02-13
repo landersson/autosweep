@@ -10,60 +10,70 @@
 MineField::MineField(int rows, int cols, int num_mines) : Grid<Cell>(rows, cols)
 {
     this->randomlyFillMines(num_mines);
-    this->setupValues();
+//    this->setupValues();
 }
 
 void MineField::resetCells()
 {
-    for (int i = 0; i < _rows; i++)
-    {
-        for (int j = 0; j < _cols; j++)
-        {
-            getCell(i, j).setState(Cell::UNKNOWN);
-            getCell(i, j).setValue(0);
-        }
-    }
+    Grid::resetCells(Cell(0, Cell::UNKNOWN));       
 }
 
 
 // set up values for each cell to be consistent with mine alignment
 void MineField::setupValues()
 {
-    for (int i = 0; i < _rows; i++)
-    {
-        for (int j = 0; j < _cols; j++)
+//    for (int i = 0; i < _rows; i++)
+//    {
+//        for (int j = 0; j < _cols; j++)
+//        {
+    for (auto git = Grid::begin(); git != Grid::end(); ++git)
+    {                            
+        if (this->getCell(git.getLocation()).getValue() != Cell::MINE) continue;
+
+        Neighbours lst = this->getNeighbours(git.getLocation());
+        
+        for (size_t k = 0; k < lst.size(); k++)
         {
-            if (this->getCell(i, j).getValue() != Cell::MINE) continue;
-
-            Neighbours lst = this->getNeighbours(i, j);
-
-            for (size_t k = 0; k < lst.size(); k++)
-            {
-                Location& p = lst[k];
-                Cell& c = getCell(p);
-
-                if (c.getValue() != Cell::MINE)
-                    c.setValue(c.getValue() + 1);
-            }
+            Location& p = lst[k];
+            Cell& c = getCell(p);
+            
+            if (c.getValue() != Cell::MINE)
+                c.setValue(c.getValue() + 1);
         }
     }
 }
 
-// randomly fill in <num> mines into board
-void MineField::randomlyFillMines(int num)
+
+int MineField::getNumCellsWithState(int state) const
 {
-    int i, j;
-    while (num--)
+    int num = 0;
+    
+    for (const Cell& cell : *this)
+    {
+        if (cell.getState() == state) num++;
+    }
+
+    return num;
+}
+
+// randomly fill in <num> mines into board
+void MineField::randomlyFillMines(int num_mines)
+{
+    resetCells();
+    int i, j; 
+    
+    while (num_mines--)
     {
         do
         {
-            i = rand_int(0, _rows - 1);
-            j = rand_int(0, _cols - 1);
+            i = utils::rand_int(0, _rows - 1);
+            j = utils::rand_int(0, _cols - 1);
         }
-        while (getCell(i, j).getValue() == Cell::MINE);
+        while (getCell(Location(i, j)).getValue() == Cell::MINE);
 
-        getCell(i, j).setValue(Cell::MINE);
+        getCell(Location(i, j)).setValue(Cell::MINE);
     }
+    setupValues();
 }
 
 
@@ -87,7 +97,7 @@ std::string MineField::toString() const
         res << std::setw(4) << std::left << i << std::setw(0);
 
         for (int j = 0; j < _cols; j++)
-            res << getCell(i, j).toString();
+            res << getCell(Location(i, j)).toString();
         res << "\n";
     }
     return res.str();
@@ -147,7 +157,7 @@ bool MineField::fromStrings(const std::vector<std::string>& strings)
         for (int j = 0; j < cols; j++)
         {
             int cell_pos = 4 + j * 4;
-            getCell(i, j).fromString(strings[i + 2].substr(cell_pos, 4));
+            getCell(Location(i, j)).fromString(strings[i + 2].substr(cell_pos, 4));
         }
     }
 

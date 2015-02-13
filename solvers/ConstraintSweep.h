@@ -14,7 +14,7 @@ public:
     // this method gets called every time a new game is started
     virtual void startNewGame(int total_num_mines = -1) 
     { 
-        _total_num_mines = total_num_mines;
+        _mines_left = total_num_mines;
     }
     
     // this gets called to generate new sweep actions as long as we are still alive
@@ -30,9 +30,10 @@ private:
                        int i, int j);
     void selectFirstUnknown(const MineField* mf);
 
+    void removeDuplicateActions();
 
-    // the total number of mines in the current game
-    int _total_num_mines;
+    // the total number of mines left in unknown cells 
+    int _mines_left;
 
     ConstraintSolver _cst_solver;
 

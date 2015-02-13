@@ -12,7 +12,7 @@ IconFactory::IconFactory()
     MINE = new QIcon(":/images/icons/MINE.png");
 
     for (int i = 0; i < 9; i++)
-        NUM[i] = new QIcon(std::string(":/images/icons/" + int2str(i) + ".png").c_str());
+        NUM[i] = new QIcon(std::string(":/images/icons/" + utils::int2str(i) + ".png").c_str());
 }
 
 IconFactory* IconFactory::getInstance()

@@ -3,7 +3,9 @@ cmake_minimum_required(VERSION 2.8)
 
 
 #set(CMAKE_BUILD_TYPE "Release")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x -Wall -Werror -Wsign-compare")
+remove_definitions(-DNDEBUG)
+
+SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall -Wsign-compare")
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -48,6 +50,14 @@ add_executable(cas
   )
 
 target_link_libraries(cas sweep-core)
+
+
+#--- command line test tool ---
+add_executable(test_Grid
+  test/test_Grid.cc
+  )
+
+#target_link_libraries(cas sweep-core)
 
 
 # check if Qt development files are available

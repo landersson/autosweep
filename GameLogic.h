@@ -5,12 +5,17 @@
 #include "MineField.h"
 #include "GameState.h"
 
+/*!
+ * \class GameLogic
+ * \brief Implements the Mine Sweeper game logic
+ */
 class GameLogic
 {
 protected:
     MineField*  _mine_field;
     GameState   _state;
     int         _num_mines; // total number of mines on the field
+    bool        _first_move;
 
     void floodFillDig(int i, int j);
     void revealAll();
@@ -26,7 +31,6 @@ public:
     int getRows() const;
     int getCols() const;
     int getNumMines() const;
-    int getMarkedNum() const;
 
     GameState getState() const;
 

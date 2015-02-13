@@ -8,7 +8,8 @@
 //--- Constraint --------------------------------------------------------------
 //
 // This class describes a relation of the form x1 + x2 + ... + x<n> = C
-// In this application, x's are assumed to be a boolean variables. 
+// In this application, x's are assumed to be boolean variables (0 or 1), 
+// and C is a positive integer. 
 //
 //-----------------------------------------------------------------------------
 struct Constraint
@@ -19,10 +20,11 @@ struct Constraint
     // the original minefield location of this Constraint
     Location loc;
 
-    // lhs variable indices: i.e: x0+x1+x3+x4 makes xs={1,3,4}
+    // lhs (left hand side) variable indices: i.e: 
+    // x0 + x1 + x3 + x6 makes xs = {0,1,3,6}
     std::vector<int> xs;
 
-    // rhs constant value
+    // right hand side constant value
     int C;
 
 
@@ -42,11 +44,12 @@ struct Constraint
         return std::find(xs.begin(), xs.end(), i) != xs.end();
     }
 
-    void fixIndices(std::map<int, int>& new_indices)
+    // update variable indices according to given int->int mapping
+    void remapIndices(const std::map<int, int>& new_indices)
     {
         for (unsigned i = 0; i < xs.size(); i++)
         {
-            xs[i] = new_indices[xs[i]];
+            xs[i] = new_indices.at(xs[i]);
         }
         sort(xs.begin(), xs.end());
     }
@@ -71,11 +74,14 @@ struct Constraint
         // initially, set all mass bits representing xs to one 
         // i.e (not eliminated)
 
-        unsigned mask = (1 << xs.size()) - 1;
+//        unsigned mask = (1 << xs.size()) - 1;
         
+        // number of variables left on the LHS of this constraint
+        int num_vars_left = xs.size();
+
         int c = C;
         
-        // "subtract" known variables from this Constraint.
+        // "subtract" known variables from 'C' of this Constraint.
         for (unsigned i = 0; i < xs.size(); i++)
         {
             unsigned x_index = xs[i];
@@ -91,13 +97,15 @@ struct Constraint
                 }
 
                 // remove it from the LHS bitmask of vars
-                clearBit(mask, i);
+//                clearBit(mask, i);
+
+                num_vars_left--;
             }
         }
         
-        int num_bits_set = countBitsSet(mask);
+//        int num_bits_set = countBitsSet(mask);
 
-        if (num_bits_set == 1)
+        if (num_vars_left == 1)
         {
             // If only one x variable remains, it must be x<n>, i.e 'last',
             // and this constraint is fully resolvable. If the value
@@ -115,7 +123,7 @@ struct Constraint
     }
 
     // returns true if the lhs x variable configuration given in 'vars'
-    // is compatible with this constraint
+    // is a solution to this constraint
     bool isValidSolution(const std::vector<bool> &vars) const
     {
         int c = 0;

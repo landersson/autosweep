@@ -13,9 +13,9 @@ MineFieldButton::MineFieldButton(QWidget* parent, int _i, int _j) :
     _tag(0)
 {
     std::string name = "Button";
-    name += int2str(_i);
+    name += utils::int2str(_i);
     name += ":";
-    name += int2str(_j);
+    name += utils::int2str(_j);
     setObjectName(name.c_str());
 }
 

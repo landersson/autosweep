@@ -10,17 +10,20 @@ class AutoSweep;
 class SweepAction;
 class MineField;
 
-
+/*!
+ * \class GameInterface
+ * \brief Defines the interface between the Game and the Solver
+ */
 class GameInterface
 {
 public:
-    // controller methods
+    // game controller methods
     virtual void startNewGame(int rows, int cols, int num_mines) = 0;
     virtual bool loadGame(const std::string& filename) = 0;
 
     virtual void executeAction(const SweepAction& action) = 0;
 
-    // interpreter methods
+    // game state investigation methods
     virtual const MineField* getMineField() = 0;
     virtual GameState getGameState() const = 0;
     virtual int getNumMines() const = 0;
