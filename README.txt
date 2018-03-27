@@ -1,4 +1,5 @@
-o
+Simple MineSweeper Solver with GUI
+
 Build Instructions:
 
   Dependencies: cmake, 
